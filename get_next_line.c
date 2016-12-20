@@ -12,6 +12,24 @@
 
 #include "get_next_line.h"
 
+int		nl_free(char **line, t_list *lst, int *is_sec)
+{
+	if (*is_sec == 0)
+	{
+		*line = ft_strdup((const char*)lst->content);
+		ft_bzero(lst->content, BUFF_SIZE + 1);
+		*is_sec = 1;
+		return (0);
+	}
+	else
+	{
+		*line = ft_strjoin((const char*)*line, (const char*)lst->content);
+		ft_bzero(lst->content, BUFF_SIZE + 1);
+		return (0);
+	}
+	return (0);
+}
+
 int		proc_buf(char **line, t_list *lst, int *is_sec)
 {
 	char	*nl;
@@ -21,21 +39,7 @@ int		proc_buf(char **line, t_list *lst, int *is_sec)
 	else
 	{
 		if ((nl = ft_strchr((const char*)lst->content, '\n')) == NULL)
-		{
-			if (*is_sec == 0)
-			{
-				*line = ft_strdup((const char*)lst->content);
-				ft_bzero(lst->content, BUFF_SIZE + 1);
-				*is_sec = 1;
-				return (0);
-			}
-			else
-			{
-				*line = ft_strjoin((const char*)*line, (const char*)lst->content);
-				ft_bzero(lst->content, BUFF_SIZE + 1);
-				return (0);
-			}
-		}
+			return (nl_free(line, lst, is_sec));
 		*nl = '\0';
 		if (*is_sec == 0)
 		{
@@ -55,6 +59,12 @@ int		proc_buf(char **line, t_list *lst, int *is_sec)
 	return (0);
 }
 
+int		ft_clean(char **line, t_list *lst)
+{
+	ft_bzero(*line, ft_strlen(*line));
+	return (0);
+}
+
 int		get_next_line(const int fd, char **line)
 {
 	static t_list	*lst;
@@ -70,10 +80,8 @@ int		get_next_line(const int fd, char **line)
 	if (proc_buf(line, lst, &is_sec))
 		return (1);
 	while ((i = read(fd, lst->content, BUFF_SIZE)) > 0)
-	{
 		if (proc_buf(line, lst, &is_sec))
 			return (1);
-	}
 	if (proc_buf(line, lst, &is_sec))
 		return (1);
 	if (i == -1)
@@ -83,6 +91,5 @@ int		get_next_line(const int fd, char **line)
 		is_sec = 0;
 		return (1);
 	}
-	ft_bzero(*line, BUFF_SIZE + 1);
-	return (0);
+	return (ft_clean(line, lst));
 }

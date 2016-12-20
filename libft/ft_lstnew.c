@@ -24,7 +24,7 @@ t_list		*ft_lstnew(void const *content, size_t content_size)
 		if ((lstnew->content = malloc(content_size + 1)) == NULL)
 			return (0);
 		lstnew->content_size = content_size;
-		while ((content_size--) + 1 > 0)
+		while ((content_size--) > 0)
 		{
 			*(char *)(lstnew->content + content_size) =
 				*(char *)(content + content_size);

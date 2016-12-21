@@ -6,12 +6,12 @@
 /*   By: vrybalko <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/12/15 15:31:58 by vrybalko          #+#    #+#             */
-/*   Updated: 2016/12/19 18:51:16 by vrybalko         ###   ########.fr       */
+/*   Updated: 2016/12/21 12:17:12 by vrybalko         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef		__GET_NEXT_LINE_H
-#define		__GET_NEXT_LINE_H
+#ifndef __GET_NEXT_LINE_H
+# define __GET_NEXT_LINE_H
 
 # include <sys/types.h>
 # include <sys/uio.h>

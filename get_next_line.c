@@ -6,57 +6,55 @@
 /*   By: vrybalko <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/12/15 15:32:05 by vrybalko          #+#    #+#             */
-/*   Updated: 2016/12/21 12:49:22 by vrybalko         ###   ########.fr       */
+/*   Updated: 2016/12/21 20:23:06 by vrybalko         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-int		nl_free(char **line, t_list *lst, int *is_sec)
+int		nl_free(char **line, t_buf *lst, int *is_sec)
 {
 	char	*tmp;
 
 	if (*is_sec == 0)
 	{
-		*line = ft_strdup((const char*)lst->content);
-		ft_bzero(lst->content, BUFF_SIZE + 1);
+		*line = ft_strdup((const char*)lst->text);
+		ft_bzero(lst->text, BUFF_SIZE + 1);
 		*is_sec = 1;
 		return (0);
 	}
 	else
 	{
 		tmp = *line;
-		*line = ft_strjoin((const char*)tmp, (const char*)lst->content);
-		ft_bzero(lst->content, BUFF_SIZE + 1);
+		*line = ft_strjoin((const char*)tmp, (const char*)lst->text);
+		ft_bzero(lst->text, BUFF_SIZE + 1);
 		free(tmp);
 		return (0);
 	}
 	return (0);
 }
 
-int		proc_buf(char **line, t_list *lst, int *is_sec)
+int		proc_buf(char **line, t_buf *lst, int *is_sec)
 {
 	char	*nl;
 	char	*tmp;
 
-	if (((char*)(lst->content))[0] == '\0')
+	if (((char*)(lst->text))[0] == '\0')
 		return (0);
-	if ((nl = ft_strchr((const char*)lst->content, '\n')) == NULL)
+	if ((nl = ft_strchr((const char*)lst->text, '\n')) == NULL)
 		return (nl_free(line, lst, is_sec));
 	*nl = '\0';
 	if (*is_sec == 0)
 	{
-		*line = ft_strdup((const char*)lst->content);
-		lst->content =
-			ft_strcpy((char*)lst->content, (const char*)(nl + 1));
+		*line = ft_strdup((const char*)lst->text);
+		lst->text = ft_strcpy((char*)lst->text, (const char*)(nl + 1));
 		return (1);
 	}
 	else
 	{
 		tmp = *line;
-		*line = ft_strjoin((const char*)tmp, (const char*)lst->content);
-		lst->content =
-			ft_strcpy((char*)lst->content, (const char*)(nl + 1));
+		*line = ft_strjoin((const char*)tmp, (const char*)lst->text);
+		lst->text = ft_strcpy((char*)lst->text, (const char*)(nl + 1));
 		free(tmp);
 		return (1);
 	}
@@ -85,29 +83,31 @@ t_list	*find_fd(t_list *lst, const int fd)
 		tmp1 = ft_strnew(BUFF_SIZE + 1);
 		tmp_buf = ft_buf_new(tmp1, fd);
 		lst = ft_lstnew(tmp_buf, sizeof(tmp_buf));
+		((t_buf *)lst->content)->fd = fd;
 		free(tmp1);
 		free(tmp_buf);
 		return (lst);
 	}
-	while (lst)
+	while (lst->next)
 	{
-		if (lst->content->fd == fd)
+		if (((t_buf *)(lst->content))->fd == fd)
 			return (lst);
 		lst = lst->next;
 	}
 	tmp1 = ft_strnew(BUFF_SIZE + 1);
 	tmp_buf = ft_buf_new(tmp1, fd);
-	tmp = ft_lstnew(tmp_buf, sizeof(tmp_buf));
+	tmp = ft_lstnew(tmp_buf, BUFF_SIZE + 5);
+	((t_buf *)tmp->content)->fd = fd;
 	free(tmp1);
 	free(tmp_buf);
 	lst->next = tmp;
-	return (lst);
+	return (lst->next);
 }
 
 int		get_next_line(const int fd, char **line)
 {
 	static t_list	*lst;
-	char			*tmp;
+	t_list			*tmp;
 	int				is_sec;
 	int				i;
 
@@ -115,18 +115,13 @@ int		get_next_line(const int fd, char **line)
 		return (-1);
 	i = 0;
 	is_sec = 0;
-	if (lst == NULL)
-	{
-		tmp = ft_strnew(BUFF_SIZE + 1);
-		lst = ft_lstnew((const void *)tmp, BUFF_SIZE + 1);
-		free(tmp);
-	}
-	if (proc_buf(line, lst, &is_sec))
+	tmp = find_fd(lst, fd);
+	if (proc_buf(line, (t_buf *)(tmp->content), &is_sec))
 		return (1);
-	while ((i = read(fd, lst->content, BUFF_SIZE)) > 0)
-		if (proc_buf(line, lst, &is_sec))
+	while ((i = read(fd, ((t_buf *)(tmp->content))->text, BUFF_SIZE)) > 0)
+		if (proc_buf(line, (t_buf *)(tmp->content), &is_sec))
 			return (1);
-	if (proc_buf(line, lst, &is_sec))
+	if (proc_buf(line, (t_buf *)(tmp->content), &is_sec))
 		return (1);
 	if (i == -1)
 		return (-1);

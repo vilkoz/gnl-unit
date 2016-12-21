@@ -6,33 +6,42 @@
 /*   By: vrybalko <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/12/19 18:32:06 by vrybalko          #+#    #+#             */
-/*   Updated: 2016/12/19 18:37:14 by vrybalko         ###   ########.fr       */
+/*   Updated: 2016/12/21 19:40:40 by vrybalko         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 #include <stdio.h>
 #include <fcntl.h>
-/*int		main(void)
+int		main(void)
   {
   int		i;
   int		fd;
+  int		fd1;
+  int		tmp;
   char	*line;
   int		res;
 
-  i = 5;
+  i = 25;
   line = ft_strnew(10000);
-  fd = open("test1.txt", O_RDONLY);
+  //fd = open("/nfs/2016/v/vrybalko/github/42FileChecker-master/srcs/gnl/gnl1_3.txt", O_RDONLY);
+  fd1 = open("test1.txt", O_RDONLY);
+  fd = open("test2.txt", O_RDONLY);
   while (i > 0)
   {
-  res = get_next_line(fd, &line);
-  printf("str is %d = |%s|\n", res, line);
-  i--;
+	  if (i % 2 == 0)
+		  tmp = fd;
+	  else
+		  tmp = fd1;
+	  res = get_next_line(tmp, &line);
+	  printf("str is %d = |%s|\n", res, line);
+	  i--;
   }
   close(fd);
+  close(fd1);
   return (0);
-  }*/
-
+  }
+/*
 int		main(void)
 {
 	char *line;
@@ -55,4 +64,4 @@ int		main(void)
 	printf("ret = %d str = |%s|\n", gnl_ret, line);
 	gnl_ret = get_next_line(p[0], &line);
 	printf("ret = %d str = |%s|\n", gnl_ret, line);
-}
+}*/

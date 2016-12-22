@@ -18,14 +18,15 @@
 # include <unistd.h>
 # include <stdlib.h>
 # include "libft/libft.h"
-# define BUFF_SIZE 5
+# define BUFF_SIZE 20
 
-int				get_next_line(const int fd, char **line);
+int					get_next_line(const int fd, char **line);
 
-typedef struct	s_buf
+typedef struct		s_buf
 {
-	char		*text;
-	int			fd;
-}				t_buf;
+	char			*text;
+	int				fd;
+	struct s_buf	*next;
+}					t_buf;
 
 #endif

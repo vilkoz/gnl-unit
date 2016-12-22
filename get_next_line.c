@@ -39,7 +39,9 @@ int		proc_buf(char **line, t_buf *lst, int *is_sec)
 	char	*nl;
 	char	*tmp;
 
-	if (((char*)(lst->text))[0] == '\0')
+	if (!lst)
+		return (0);
+	if (lst->text[0] == '\0')
 		return (0);
 	if ((nl = ft_strchr((const char*)lst->text, '\n')) == NULL)
 		return (nl_free(line, lst, is_sec));
@@ -67,47 +69,57 @@ t_buf	*ft_buf_new(void *content, const int fd)
 
 	new = (t_buf *)malloc(sizeof(t_buf));
 	new->text = (char *)malloc(BUFF_SIZE + 1);
-	new->text = ft_strcpy(new->text, (const char *)content);
+	new->text = ft_memcpy((void *)new->text,
+			(const void *)content, BUFF_SIZE + 1);
 	new->fd = (int)fd;
+	new->next = NULL;
 	return (new);
 }
 
-t_list	*find_fd(t_list *lst, const int fd)
+t_buf	*find_fd(t_buf **lst, const int fd)
 {
-	t_list	*tmp;
-	t_buf	*tmp_buf;
+	t_buf	*tmp;
+	t_buf	*last;
 	char	*tmp1;
 
-	if (!lst)
+	if (!(*lst))
 	{
-		tmp1 = ft_strnew(BUFF_SIZE + 1);
-		tmp_buf = ft_buf_new(tmp1, fd);
-		lst = ft_lstnew(tmp_buf, sizeof(tmp_buf));
-		((t_buf *)lst->content)->fd = fd;
+		tmp1 = ft_strnew(BUFF_SIZE);
+		*lst = ft_buf_new(tmp1, fd);
 		free(tmp1);
-		free(tmp_buf);
-		return (lst);
+		return (*lst);
 	}
-	while (lst->next)
+	tmp = *lst;
+	while (tmp)
 	{
-		if (((t_buf *)(lst->content))->fd == fd)
-			return (lst);
-		lst = lst->next;
+		if (tmp->fd == fd)
+			return (tmp);
+		last = tmp;
+		tmp = tmp->next;
 	}
-	tmp1 = ft_strnew(BUFF_SIZE + 1);
-	tmp_buf = ft_buf_new(tmp1, fd);
-	tmp = ft_lstnew(tmp_buf, BUFF_SIZE + 5);
-	((t_buf *)tmp->content)->fd = fd;
+	tmp1 = ft_strnew(BUFF_SIZE);
+	tmp = ft_buf_new(tmp1, fd);
+	last->next = tmp;
 	free(tmp1);
-	free(tmp_buf);
-	lst->next = tmp;
-	return (lst->next);
+	return (tmp);
+}
+
+void	ft_clear(t_buf *head, t_buf **lst)
+{
+	t_buf	*tmp;
+
+	tmp = head;
+	while(tmp->next && tmp->next != *lst)
+		tmp = tmp->next;
+	tmp->next = (*lst)->next;
+	free((*lst)->text);
+	free(*lst);
 }
 
 int		get_next_line(const int fd, char **line)
 {
-	static t_list	*lst;
-	t_list			*tmp;
+	static t_buf	*head;
+	t_buf			*lst;
 	int				is_sec;
 	int				i;
 
@@ -115,13 +127,19 @@ int		get_next_line(const int fd, char **line)
 		return (-1);
 	i = 0;
 	is_sec = 0;
-	tmp = find_fd(lst, fd);
-	if (proc_buf(line, (t_buf *)(tmp->content), &is_sec))
+	if (!head)
+	{
+		head = find_fd(&head, fd);
+		lst = head;
+	}
+	else
+		lst = find_fd(&head, fd);
+	if (proc_buf(line, lst, &is_sec))
 		return (1);
-	while ((i = read(fd, ((t_buf *)(tmp->content))->text, BUFF_SIZE)) > 0)
-		if (proc_buf(line, (t_buf *)(tmp->content), &is_sec))
+	while ((i = read(fd, lst->text, BUFF_SIZE)) > 0)
+		if (proc_buf(line, lst, &is_sec))
 			return (1);
-	if (proc_buf(line, (t_buf *)(tmp->content), &is_sec))
+	if (proc_buf(line, lst, &is_sec))
 		return (1);
 	if (i == -1)
 		return (-1);
@@ -131,5 +149,6 @@ int		get_next_line(const int fd, char **line)
 		return (1);
 	}
 	ft_bzero(*line, ft_strlen(*line));
+	ft_clear(head, &lst);
 	return (0);
 }

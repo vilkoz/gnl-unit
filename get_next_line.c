@@ -6,7 +6,7 @@
 /*   By: vrybalko <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/12/15 15:32:05 by vrybalko          #+#    #+#             */
-/*   Updated: 2016/12/21 20:23:06 by vrybalko         ###   ########.fr       */
+/*   Updated: 2016/12/23 14:33:01 by vrybalko         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,17 +63,32 @@ int		proc_buf(char **line, t_buf *lst, int *is_sec)
 	return (0);
 }
 
-t_buf	*ft_buf_new(void *content, const int fd)
+t_buf	*ft_buf_new(void *content, const int fd, t_buf *head, t_buf **lst)
 {
 	t_buf	*new;
+	t_buf	*tmp;
 
-	new = (t_buf *)malloc(sizeof(t_buf));
-	new->text = (char *)malloc(BUFF_SIZE + 1);
-	new->text = ft_memcpy((void *)new->text,
-			(const void *)content, BUFF_SIZE + 1);
-	new->fd = (int)fd;
-	new->next = NULL;
-	return (new);
+	if (head && lst)
+	{
+		tmp = head;
+		while (tmp->next && tmp->next != *lst)
+			tmp = tmp->next;
+		tmp->next = (*lst)->next;
+		free((*lst)->text);
+		free(*lst);
+		return (0);
+	}
+	if (content)
+	{
+		new = (t_buf *)malloc(sizeof(t_buf));
+		new->text = (char *)malloc(BUFF_SIZE + 1);
+		new->text = ft_memcpy((void *)new->text,
+				(const void *)content, BUFF_SIZE + 1);
+		new->fd = (int)fd;
+		new->next = NULL;
+		return (new);
+	}
+	return (0);
 }
 
 t_buf	*find_fd(t_buf **lst, const int fd)
@@ -85,7 +100,7 @@ t_buf	*find_fd(t_buf **lst, const int fd)
 	if (!(*lst))
 	{
 		tmp1 = ft_strnew(BUFF_SIZE);
-		*lst = ft_buf_new(tmp1, fd);
+		*lst = ft_buf_new(tmp1, fd, 0, 0);
 		free(tmp1);
 		return (*lst);
 	}
@@ -98,22 +113,10 @@ t_buf	*find_fd(t_buf **lst, const int fd)
 		tmp = tmp->next;
 	}
 	tmp1 = ft_strnew(BUFF_SIZE);
-	tmp = ft_buf_new(tmp1, fd);
+	tmp = ft_buf_new(tmp1, fd, 0, 0);
 	last->next = tmp;
 	free(tmp1);
 	return (tmp);
-}
-
-void	ft_clear(t_buf *head, t_buf **lst)
-{
-	t_buf	*tmp;
-
-	tmp = head;
-	while(tmp->next && tmp->next != *lst)
-		tmp = tmp->next;
-	tmp->next = (*lst)->next;
-	free((*lst)->text);
-	free(*lst);
 }
 
 int		get_next_line(const int fd, char **line)
@@ -127,13 +130,8 @@ int		get_next_line(const int fd, char **line)
 		return (-1);
 	i = 0;
 	is_sec = 0;
-	if (!head)
-	{
-		head = find_fd(&head, fd);
-		lst = head;
-	}
-	else
-		lst = find_fd(&head, fd);
+	head = (!head) ? (find_fd(&head, fd)) : head;
+	lst = find_fd(&head, fd);
 	if (proc_buf(line, lst, &is_sec))
 		return (1);
 	while ((i = read(fd, lst->text, BUFF_SIZE)) > 0)
@@ -144,11 +142,8 @@ int		get_next_line(const int fd, char **line)
 	if (i == -1)
 		return (-1);
 	if (is_sec != 0)
-	{
-		is_sec = 0;
 		return (1);
-	}
 	ft_bzero(*line, ft_strlen(*line));
-	ft_clear(head, &lst);
+	ft_buf_new(0, 0, head, &lst);
 	return (0);
 }

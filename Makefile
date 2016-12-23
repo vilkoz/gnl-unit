@@ -6,7 +6,7 @@
 #    By: vrybalko <marvin@42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2016/11/23 14:08:11 by vrybalko          #+#    #+#              #
-#    Updated: 2016/12/05 15:02:54 by vrybalko         ###   ########.fr        #
+#    Updated: 2016/12/23 13:36:31 by vrybalko         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -19,7 +19,7 @@ SRCS = main.c 			\
 
 BINS = $(SRCS:.c=.o)
 
-all: $(NAME)
+all: $(NAME) lib
 
 $(NAME): $(BINS)
 
@@ -31,11 +31,9 @@ lib:
 	cp -f libft/libft.a ./
 
 clean:
-	make -C libft/ clean
 	/bin/rm -f $(BINS)
 
 fclean: clean
-	make -C libft/ fclean
 	/bin/rm -f $(NAME)
 
 re: fclean all

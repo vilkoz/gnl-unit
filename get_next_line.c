@@ -144,6 +144,5 @@ int		get_next_line(const int fd, char **line)
 	if (is_sec != 0)
 		return (1);
 	ft_bzero(*line, ft_strlen(*line));
-	ft_buf_new(0, 0, head, &lst);
 	return (0);
 }
